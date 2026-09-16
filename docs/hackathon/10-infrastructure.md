@@ -24,6 +24,8 @@ Environment (`staging`, `prod`) is distinct from chain network (`mainnet`, local
 
 Manager records registry changes atomically after confirmed results, validates code/interface identity, and handles partial deployment without overwriting successful unrelated records. A failed initialization leaves a disabled registry record and a recovery action, not an apparently active integration. Contract upgrade/ownership changes are separate audited operations; container rollback cannot roll back onchain state.
 
+Manager supports proxy deployment with atomic initialization, implementation verification, role handoff, and governed upgrade/migration bundles as specified in [the contracts spec](02-vaults.md). Store proxy, implementation, admin/timelock, storage-layout/version metadata, and authority transitions in the canonical registry; product clients continue resolving the proxy/custody address. Verify both implementation code and proxy configuration after every upgrade. For Solana, record program version, account-schema version, and native upgrade authority. Rehearse a multisig-executed upgrade and confirm old deployer access is removed before declaring handoff complete.
+
 No production address in per-service environment defaults. Distribute a versioned registry snapshot. Services report the registry/config/image versions they are running. Incompatible schema or registry revisions block activation.
 
 ## 4. CI workflows
@@ -31,8 +33,8 @@ No production address in per-service environment defaults. Distribute a versione
 | Workflow | Required checks/results |
 | --- | --- |
 | PR validation | Rust format/lint/tests; TS checks/build; Python SDK tests/types; documentation links; schema compatibility |
-| EVM contracts | Pinned compiler/Foundry, unit/fuzz/invariant tests, gas/size tracking, approved fork simulations |
-| Solana programs | Pinned toolchain, program/instruction tests, adversarial account validation, build verification |
+| EVM contracts | Pinned compiler/Foundry, unit/fuzz/invariant tests, gas/size tracking, approved fork simulations, proxy upgrade/storage validation, multisig handoff and populated-state migration tests |
+| Solana programs | Pinned toolchain, program/instruction tests, adversarial account validation, build verification, multisig authority transfer and account-layout migration tests |
 | Data room | Scoped crates, deterministic synthetic transforms, schema fixtures, dependency isolation |
 | Contract/schema parity | Shared economic/wire vectors, generated client drift, registry consistency |
 | Policy | No actual datasets, secrets scanning, address-authority checks, no Sui dependencies |

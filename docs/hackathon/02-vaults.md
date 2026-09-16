@@ -6,7 +6,7 @@ Port the SuiOptions v2 capital structure and custody model, using HyperEVM as th
 
 Contract boundaries: `VaultFactory`, `HubVault`, `CapitalAccounting`, `PositionLedger`, `WithdrawalQueue`, `IntegrationRegistry`, `ValuationRegistry`, `ProtocolTreasury`, EVM/Solana `SpokeVault`, and transport/venue/bridge adapters. Library/module decomposition may differ, but audit boundaries and invariants must remain explicit.
 
-One curator can operate several instances of a vault family. Authority to trade is separate from authority to redeem an investor claim. Adapters can move funds only to approved custody destinations and return outputs to vault custody. Arbitrary external calls, arbitrary approvals, user-supplied recipients, and arbitrary delegatecall are prohibited.
+One curator can operate several instances of a vault family. Authority to trade is separate from authority to redeem an investor claim. Adapters can move funds only to approved custody destinations and return outputs to vault custody. Arbitrary external calls, arbitrary approvals, user-supplied recipients, and arbitrary delegatecall are prohibited. Standard proxy delegation to a governance-approved implementation is the explicit exception; callers cannot choose its delegatecall target.
 
 ## 2. Creation terms
 
@@ -100,3 +100,29 @@ Close only after positions, unsettled orders, bridges, remote balances, fee liab
 ## 8. Test requirements
 
 Implement a Rust reference accounting model and shared golden vectors used by EVM tests and Solana serialization tests. Cover fee basis/splits/transfers, share inflation/donations, rounding at zero/tiny values, senior buffers, loss waterfall, partial withdrawals, queue fairness, insolvency, junior reset, rotation, settlement, and cross-chain liabilities. Fuzz stateful sequences and check conservation after every operation. Review implementation and specification together before mainnet exposure.
+
+## 9. Transferable roles and multisig handoff
+
+Every privileged role MUST be transferable or rotatable after deployment, including protocol/default admin, upgrade authority, curator, adapter/oracle/transport configuration, treasury administration, pauser, and operational permissions. Maintain an explicit role-to-admin hierarchy and role inventory for every contract/program. Never bind authority permanently to the deployer, an immutable EOA, or `tx.origin`; supported multisigs must be able to invoke the same privileged operations.
+
+Root ownership/admin transfer uses nomination and acceptance by the successor, with the configured governance delay, cancellation, and events. Operational roles support controlled grant/revoke rotation; the handoff procedure verifies successor capability before removing predecessor access. Curator rotation preserves investor claims, fee basis, commitment obligations, and existing withdrawal rights. Governance role transfer does not transfer ownership of depositor assets.
+
+Deployment-manager MUST support deployer-to-multisig handoff and subsequent multisig-to-multisig rotation, including any proxy admin, timelock, factory, and Solana program authority. After handoff it verifies the full role inventory and removes unintended deployer grants. No remaining deployer-only initialization, upgrade, emergency, or configuration path may bypass the successor. Record current authorities and pending transfers through the registry/indexer views, without introducing another address-definition source.
+
+## 10. Upgradeable and extensible contract architecture
+
+All stateful first-party EVM protocol components, including hubs, spokes, factories, registries, treasuries, and adapters that retain protocol state, MUST be upgradeable through a maintained standard proxy implementation. Stateless libraries and third-party venue/system contracts are outside this requirement; their binding/replacement remains governed. Per-instance initialization, stable custody addresses, preserved storage, and extension through versioned adapters are required from the initial deployment.
+
+The baseline is OpenZeppelin `ERC1967Proxy` with a UUPS-compatible implementation and explicit upgrade authorization. An ERC-1967 proxy alone is insufficient without an upgrade mechanism. A documented Transparent/ProxyAdmin alternative is acceptable where justified, with its admin ownership included in the handoff inventory. Select one pattern per component and pin library/tool versions; do not mix UUPS and Transparent mechanisms or implement a custom proxy. Beacon upgrades require an explicit fleet-wide blast-radius decision; immutable minimal clones do not satisfy upgradeability for vault instances.
+
+Deployment initializes the proxy atomically. Implementation contracts disable initializers; initializer/reinitializer versions, parent initialization, and authorization prevent takeover or replay. Constructors must not initialize per-proxy state. CI validates upgrade safety and storage compatibility against the actual prior release, including inherited storage, namespaced layouts, and any migration. Do not bypass validation with unexplained unsafe allowances.
+
+Upgrade authority is separate from routine trading/pausing, transferable to a multisig or a timelock governed by that multisig. Publish the controlling authority, configured delay, implementation version/hash, and affected instances. Upgrades cannot be used as an ordinary path to rewrite existing economic terms. Nevertheless, upgrade controllers have powerful code-replacement authority: investor disclosures must state that trust assumption rather than claiming invariants are immune to malicious governance.
+
+Upgrade plans preserve balances, shares, tranche generations, commitments, fee basis, queues/payables, message sequence/epoch state, and custody addresses. Coordinate gateway/indexer/adapter versions and capital barriers where necessary; in-flight messages must remain interpretable or drain before an incompatible wire change. Use reviewed migration calls for versioned state changes. Rollback is permitted only if storage and migration effects are demonstrably compatible; otherwise use a tested roll-forward recovery.
+
+Solana uses the native upgradeable program mechanism rather than EVM proxies. Retain transferable upgrade authority and support a multisig-controlled authority/PDA using its supported governance execution path. Program-level admin/curator roles must rotate too. Preserve program identity and vault PDAs, version account layouts, and test account migrations with existing balances and claims. Never finalize/remove program upgrade authority as part of ordinary deployment or handoff.
+
+Required release tests: actual multisig-authorized role handoff/rotation; predecessor denial; unauthorized upgrade rejection; initializer takeover/replay rejection; compatible upgrade with populated vault/tranche/queue/message state; incompatible storage rejection; continued upgrades after handoff; and post-upgrade deposit/trade/withdraw behavior. A new integration must be addable through the documented governed extension path without redeploying custody or discarding accounting history.
+
+Implementation references: [OpenZeppelin proxy mechanisms](https://docs.openzeppelin.com/contracts/5.x/api/proxy), [upgrade-safe initialization and storage](https://docs.openzeppelin.com/upgrades-plugins/writing-upgradeable), [access control](https://docs.openzeppelin.com/contracts/5.x/access-control), and [Solana program authority](https://solana.com/docs/programs/deploying).

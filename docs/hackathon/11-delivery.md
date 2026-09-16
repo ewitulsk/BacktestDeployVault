@@ -26,7 +26,7 @@ Begin Robinhood/Solana feasibility in the first window even though release order
 | W05 / data | Reservoir ingest, catalog, live collectors | W01/W03 | Remote partitions/versioned coverage and feeds; gaps visible |
 | W06 / quant-runtime | SDK, event protocol, simulator | W05 schemas | Immutable artifact remote replay, reproducibility, correct order lifecycle |
 | W07 / runtime | MicroVM builds/scheduler/gateway | W02/W03/W06 interfaces | Isolation, bounded capacity, fenced recovery, autonomous authorized orders |
-| W08 / contracts | HyperEVM hub and economic library | W01/W02, ADR-003 for tranches | Invariants and reference parity; deposit/withdraw/fees; capital modes |
+| W08 / contracts | HyperEVM hub and economic library | W01/W02, ADR-003 for tranches | Invariants and reference parity; deposit/withdraw/fees; capital modes; upgradeable proxies and transferable roles |
 | W09 / integrations | HyperCore adapter and indexer | W02/W07/W08 | Mainnet spot/perp lifecycle and indexed reconciled NAV |
 | W10 / product-quant | Reports and research UX | W05/W06 | Useful charts/metrics, lineage, approved export, comparisons |
 | W11 / product | Curator/investor surfaces | W04/W08/W09/W10 | Public browse, create, deploy, invest, withdraw without source editor |
@@ -76,6 +76,9 @@ Resolve perps/router choices early. If a candidate fails, compare the next compa
 | A26 | Curator attacks via hostile recipient, manipulated pool/price, strategy limits | Every relevant venue |
 | A27 | Capital epoch fences concurrent remote trading and reconciles all snapshot/message watermarks before issuance | R1/S1 |
 | A28 | Maximum supported portfolio can complete appraisal/settlement within gas/compute limits | Every contract release |
+| A29 | Deployer-to-multisig and successor-multisig role handoffs work; predecessor loses all transferred privileges | Every contract release |
+| A30 | EVM proxy initializes atomically; unauthorized upgrades/reinitialization and incompatible storage changes fail; approved upgrade preserves populated state and user flows | Every EVM contract release |
+| A31 | Solana native upgrade authority and program roles transfer to multisig control; program/account migration preserves custody, claims, and continued upgradeability | S1 and later Solana releases |
 
 Evidence records include commit/artifact/registry versions, environment, test seed or remote run ID, observed results, and links to transactions where appropriate. Do not commit sensitive payloads or raw market datasets as evidence.
 

@@ -19,6 +19,7 @@ These decisions distinguish fixed requirements from proposals and external facts
 | ADR-011 | At least one bridge route targeted, otherwise independently funded spokes | Stretch integration | Integrations / before X1 | Actual tokens/lane, custody recipient, refund semantics, accounting proof |
 | ADR-012 | Data licenses cover hosted computation, outputs, AI use | Gate per provider | Product/data / before source enabled | Record permitted usage; obtain written terms where needed |
 | ADR-013 | Material strategy changes require published notice/exit or new vault | Required policy; duration undecided | Product/contracts / before public creation | Fix notice duration and mandate mutability in terms; no retroactive changes |
+| ADR-014 | Transferable roles and upgradeable contracts; ERC-1967/UUPS baseline for EVM, native upgrade authority for Solana | User requirement; implementation baseline specified | Contracts/platform / initial contract architecture | Inventory all roles, prove multisig handoff, validate storage/migrations, and preserve upgradeability and custody identity |
 
 No hardcoded addresses or credentials belong in decision records. Refer to logical registry IDs and evidence transaction IDs.
 

@@ -62,6 +62,8 @@ The public page shows version history and whether manual trading is permitted/ac
 
 Use two-step ownership transfer and separately scoped protocol governance for adapter registration, upgrades, treasury configuration, and emergency controls. The launch configuration records who can upgrade custody/accounting code and the applicable delay; mainnet administration should use a multisig with a tested recovery process. Emergency revocation can remove risk-increasing permissions promptly, but cannot seize investor claims, redirect payouts, waive tranche losses, or introduce a new unrestricted adapter. Registry metadata cannot override onchain governance checks.
 
+Transferable roles, standard proxy/native program upgrades, multisig handoff, and populated-state upgrade tests are mandatory under [the contracts spec](02-vaults.md). The restrictions above govern ordinary operational permissions; code-upgrade authority carries the explicitly disclosed governance trust assumption described there.
+
 ## 7. Failure and security acceptance
 
 Test guest escape prerequisites, metadata/network denial, output flooding, resource exhaustion, malicious archives, dependency build attacks, cross-tenant access, expired leases, duplicate submits, unknown orders, signer outage, venue outage, stale feed, clock drift, worker crash, and controller restart. Demonstrate revocation actually prevents new venue actions within the documented latency and that withdrawal/unwind paths do not depend on a healthy guest.

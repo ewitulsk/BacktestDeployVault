@@ -36,6 +36,8 @@
 | P20 | Public pricing communicates $20/month research and $50/month deployment; detailed paid allowances remain undecided |
 | P21 | Vault platform performance fee remains active during free subscription access |
 | P22 | Early landing page, signups, source provenance, and public demo readiness |
+| P23 | All privileged roles can transfer/rotate to multisigs after deployment without migrating user funds |
+| P24 | First-party contracts support governed upgrades and extension through proper EVM proxies or Solana's native program upgrade mechanism |
 
 ## 3. Journey and states
 
